@@ -2,7 +2,7 @@
 # Clone les repos frontend et backend séparément pour développement local
 set -euo pipefail
 
-LOCAL_DIR="${1:-$HOME/Africa Game}"
+LOCAL_DIR="${1:-/Users/Paul Do Mac Folders/Protosen_Hostinger/Africa Game}"
 mkdir -p "$LOCAL_DIR"
 
 echo "Clonage vers $LOCAL_DIR..."
