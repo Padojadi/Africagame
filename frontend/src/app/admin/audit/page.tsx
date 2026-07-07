@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
+import { BackButton } from '@/components/BackButton';
 
 export default function AuditPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AuditPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <BackButton />
       <h1 className="mb-6 text-2xl font-bold">Journal d&apos;audit</h1>
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">

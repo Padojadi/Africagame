@@ -94,6 +94,10 @@ export const api = {
   users: () => request<User[]>('/users'),
   createUser: (data: Record<string, unknown>) =>
     request<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id: string, data: Record<string, unknown>) =>
+    request<User>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteUser: (id: string) =>
+    request<{ message: string }>(`/users/${id}`, { method: 'DELETE' }),
 };
 
 export interface Payment {

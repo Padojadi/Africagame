@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
+import { BackButton } from '@/components/BackButton';
 
 interface Bet {
   id: string;
@@ -30,6 +31,7 @@ export default function BetsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
+      <BackButton />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Monitoring des paris</h1>
         {pbj && <p className="rounded-lg bg-africa-green/10 px-4 py-2 text-sm font-semibold text-africa-green">PBJ: {Number(pbj.pbj).toLocaleString()} ({pbj.count} paris)</p>}

@@ -66,6 +66,11 @@ export class UpdateUserDto {
   @IsString()
   lastName?: string;
 
+  @ApiPropertyOptional({ enum: ['EXPLOITANT', 'REGULATEUR', 'OPERATEUR'] })
+  @IsOptional()
+  @IsString()
+  role?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   active?: boolean;

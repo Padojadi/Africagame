@@ -58,6 +58,7 @@ export class UsersService {
   async update(actor: AuthUser, id: string, dto: UpdateUserDto) {
     const data: Record<string, unknown> = { ...dto };
     if (dto.password) data.password = await bcrypt.hash(dto.password, 12);
+    if (dto.role) data.role = dto.role as UserRole;
     const user = await this.prisma.user.update({
       where: { id },
       data,
