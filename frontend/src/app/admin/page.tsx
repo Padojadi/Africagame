@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, getStoredUser, Dashboard, User } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
 import { CreditCard, BarChart3, AlertTriangle, Globe2, Users, FileText } from 'lucide-react';
 
 export default function AdminPage() {
@@ -47,7 +46,6 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton href="/" label="Retour à l'accueil" />
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Tableau de bord — {user.role}</h1>
         <p className="text-gray-500">{user.firstName} {user.lastName} — {user.jurisdiction?.name || 'Vue globale'}</p>

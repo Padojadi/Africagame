@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
-
 export default function FiscalPage() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<Array<{
@@ -20,7 +18,6 @@ export default function FiscalPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton />
       <h1 className="mb-6 text-2xl font-bold">Fiscalité & prélèvements</h1>
       <p className="mb-6 text-sm text-gray-500">Calcul automatique des prélèvements PBJ selon les règles de chaque juridiction</p>
       <div className="space-y-4">
