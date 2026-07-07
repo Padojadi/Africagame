@@ -6,7 +6,7 @@ export default function HomePage() {
     <>
       <section className="bg-gradient-to-br from-africa-dark via-emerald-950 to-africa-dark text-white">
         <div className="mx-auto max-w-7xl px-4 py-20">
-          <p className="mb-3 text-sm text-africa-gold">TDR Plateforme Panafricaine de Jeux et Paris</p>
+          <p className="mb-3 text-sm text-africa-gold">Plateforme Panafricaine de Jeux et Paris</p>
           <h1 className="mb-4 max-w-4xl text-4xl font-extrabold md:text-5xl">
             Régulation, audit et concentration des flux de jeux
           </h1>
