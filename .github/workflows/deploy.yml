@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.repository == 'Padojadi/Africagame'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/africagame || git clone https://github.com/Padojadi/Africagame.git /opt/africagame
+            cd /opt/africagame
+            git pull origin main
+            export ADMIN_PASSWORD="${{ secrets.ADMIN_PASSWORD }}"
+            export JWT_SECRET="${{ secrets.JWT_SECRET }}"
+            docker compose down || true
+            docker compose build
+            docker compose up -d
