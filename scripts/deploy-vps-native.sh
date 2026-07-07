@@ -10,7 +10,7 @@ DB_PASS="${DB_PASS:-africagame_prod_2026}"
 JWT_SECRET="${JWT_SECRET:-$(openssl rand -hex 32)}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-Africagame!@#2026}"
 BACKEND_PORT=4000
-FRONTEND_PORT=3001
+FRONTEND_PORT=3002
 
 echo "=== Déploiement Africa Game TDR ==="
 
@@ -64,7 +64,7 @@ pm2 delete africagame-api 2>/dev/null || true
 pm2 delete africagame-web 2>/dev/null || true
 
 cd "$APP_DIR/backend"
-pm2 start dist/main.js --name africagame-api --cwd "$APP_DIR/backend"
+pm2 start dist/src/main.js --name africagame-api --cwd "$APP_DIR/backend"
 
 cd "$APP_DIR/frontend"
 PORT=${FRONTEND_PORT} pm2 start node --name africagame-web -- .next/standalone/server.js
@@ -88,7 +88,7 @@ server {
     }
 
     location / {
-        proxy_pass http://127.0.0.1:3001;
+        proxy_pass http://127.0.0.1:3002;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
