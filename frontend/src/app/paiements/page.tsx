@@ -3,8 +3,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
-
 interface Payment {
   id: string;
   nature: string;
@@ -61,7 +59,6 @@ function PaymentsContent() {
 export default function PaymentsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton />
       <h1 className="mb-6 text-2xl font-bold">Concentrateur de paiements</h1>
       <Suspense fallback={<p>Chargement...</p>}>
         <PaymentsContent />

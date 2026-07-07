@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
-
 export default function ResponsibleGamingPage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<Array<{
@@ -27,7 +25,6 @@ export default function ResponsibleGamingPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton />
       <h1 className="mb-2 text-2xl font-bold">Jeu responsable</h1>
       <p className="mb-6 text-sm text-gray-500">Catégorisation des parieurs (y compris MSISDN USSD/SMS)</p>
       <div className="space-y-3">
