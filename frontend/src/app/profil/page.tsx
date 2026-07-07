@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api, clearAuth, getStoredUser, User, Payment, Invoice, Dashboard } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
 import { PasswordInput } from '@/components/PasswordInput';
 import {
   UserCircle, Wallet, Database, LogOut, Shield, Building2, CreditCard, BarChart3,
@@ -56,7 +55,6 @@ export default function ProfilPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
-      <BackButton href="/admin" label="Retour au tableau de bord" />
       <div className="mb-8 flex items-start justify-between">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-africa-green text-2xl font-bold text-white">

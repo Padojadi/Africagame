@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
-
 export default function JurisdictionsPage() {
   const router = useRouter();
   const [jurisdictions, setJurisdictions] = useState<Array<{
@@ -23,7 +21,6 @@ export default function JurisdictionsPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton />
       <h1 className="mb-8 text-2xl font-bold">Juridictions & opérateurs</h1>
       <div className="mb-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {jurisdictions.map((j) => (
