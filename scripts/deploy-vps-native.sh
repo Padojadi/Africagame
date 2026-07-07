@@ -57,6 +57,9 @@ NEXT_PUBLIC_API_URL=https://africagame.2ticglobal.com/api
 EOF
 npm install
 NEXT_PUBLIC_API_URL=https://africagame.2ticglobal.com/api npm run build
+# postbuild copies .next/static into standalone (required for CSS/JS)
+cp -r .next/static .next/standalone/.next/static
+cp -r public .next/standalone/public 2>/dev/null || true
 
 # PM2
 npm install -g pm2 2>/dev/null || true
