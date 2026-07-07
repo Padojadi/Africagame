@@ -6,10 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    config: ConfigService,
-    private prisma: PrismaService,
-  ) {
+  constructor(config: ConfigService, private prisma: PrismaService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -17,15 +14,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.sub },
-      include: { country: true },
-    });
-    if (!user || !user.active) {
-      throw new UnauthorizedException('Compte invalide ou désactivé');
-    }
-    const { password: _, ...result } = user;
-    return result;
+  async validate(payload: {
+    sub: string;
+    email: string;
+    role: string;
+    jurisdictionId?: string;
+    gameOperatorId?: string;
+  }) {
+    const user = await this.prisma.user.findUnique({ where: { id: payload.sub } });
+    if (!user || !user.active) throw new UnauthorizedException();
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      jurisdictionId: user.jurisdictionId,
+      gameOperatorId: user.gameOperatorId,
+    };
   }
 }

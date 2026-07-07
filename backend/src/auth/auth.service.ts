@@ -2,62 +2,46 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { AuditService } from '../common/audit.service';
+import { LoginDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private audit: AuditService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, ip?: string) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
-      include: { country: true },
+      include: { jurisdiction: true, gameOperator: true },
     });
-    if (!user || !user.active) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
-    }
+    if (!user || !user.active) throw new UnauthorizedException('Identifiants invalides');
     const valid = await bcrypt.compare(dto.password, user.password);
-    if (!valid) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
-    }
-    const { password: _, ...safeUser } = user;
-    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-    return { user: safeUser, accessToken: token };
-  }
+    if (!valid) throw new UnauthorizedException('Identifiants invalides');
 
-  async register(dto: RegisterDto) {
-    const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
-    if (existing) throw new ConflictException('Cet email est déjà utilisé');
+    await this.audit.log({ userId: user.id, action: 'LOGIN', entity: 'User', entityId: user.id, ipAddress: ip });
 
-    const hashed = await bcrypt.hash(dto.password, 12);
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password: hashed,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        age: dto.age,
-        phone: dto.phone,
-        countryId: dto.countryId,
-        role: 'PARTICIPANT',
-      },
-      include: { country: true },
+    const { password: _, ...safe } = user;
+    const token = this.jwt.sign({
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      jurisdictionId: user.jurisdictionId,
+      gameOperatorId: user.gameOperatorId,
     });
-    const { password: _, ...safeUser } = user;
-    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-    return { user: safeUser, accessToken: token };
+    return { user: safe, accessToken: token };
   }
 
   async me(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: { country: true },
+      include: { jurisdiction: { include: { currency: true } }, gameOperator: true },
     });
     if (!user) throw new UnauthorizedException();
-    const { password: _, ...safeUser } = user;
-    return safeUser;
+    const { password: _, ...safe } = user;
+    return safe;
   }
 }

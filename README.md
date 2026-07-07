@@ -1,85 +1,48 @@
-# Africa Game — Plateforme Panafricaine
+# Africa Game — Plateforme Panafricaine de Régulation des Flux de Jeux
 
-Plateforme web pour la formation, l'accompagnement et la gestion des hackathons panafricains de création de jeux vidéo (initiative AfricanGameDev / NET-INFO × Epic MegaGrants).
+Plateforme conforme au **TDR v4** : concentrateur de paiements, monitoring des paris, fiscalité multi-juridiction, audit et jeu responsable.
 
-## Architecture
+## Architecture (TDR §6-7)
 
-| Composant | Technologie |
+| Composant | Description |
 |-----------|-------------|
-| Frontend | Next.js 15, React 19, Tailwind CSS |
-| Backend | NestJS 10, Prisma, PostgreSQL |
-| Auth | JWT + bcrypt, rôles (ADMIN, MODERATOR, MENTOR, PARTICIPANT) |
-| Déploiement | Docker Compose + Nginx |
+| **Concentrateur de paiements** | API unique pour dépôts/retraits Mobile Money (Retail/Online/USSD/SMS) |
+| **Monitoring des paris** | Déclaration temps réel ou par lot, reconstitution PBJ |
+| **Multi-juridiction** | Tenancy isolé par pays, devises, canaux configurables |
+| **Fiscalité** | Prélèvements automatiques selon règles PBJ par juridiction |
+| **Jeu responsable** | Catégorisation parieurs (MSISDN USSD/SMS inclus) |
+| **Audit** | Journal inaltérable des actions d'administration |
 
-## Structure des dépôts
+## Stack
 
-```
-africagame/           # Monorepo principal
-├── frontend/         # → padojadi/africagame-frontend
-├── backend/          # → padojadi/africagame-backend
-├── docker-compose.yml
-├── nginx/
-└── scripts/
-```
+- Frontend: Next.js 15, Tailwind, i18n (FR/EN/PT/AR)
+- Backend: NestJS 10, Prisma, PostgreSQL
+- Déploiement: Docker Compose + Nginx
 
-## Compte administrateur
+## Compte administrateur (EXPLOITANT)
 
 | Champ | Valeur |
 |-------|--------|
 | Email | `admin@africagame.2ticglobal.com` |
 | Mot de passe | `Africagame!@#2026` |
-| Privilèges | Lecture, écriture, modification, création d'utilisateurs |
 
-## Démarrage local
+Comptes démo : `regulateur@africagame.2ticglobal.com` / `Regulateur!2026` — `operateur@africagame.2ticglobal.com` / `Operateur!2026`
+
+## Démarrage
 
 ```bash
-# Avec Docker (recommandé)
 docker compose up -d
-
-# Ou manuellement
-cd backend && cp .env.example .env && npm install && npx prisma migrate dev && npm run prisma:seed && npm run start:dev
-cd frontend && cp .env.example .env.local && npm install && npm run dev
 ```
 
-- Frontend : http://localhost:3000
-- API : http://localhost:4000/api
-- Swagger : http://localhost:4000/api/docs
+- Site : https://africagame.2ticglobal.com
+- API : `/api` — Swagger : `/api/docs`
 
-## Déploiement VPS (195.110.35.45)
+## API Opérateurs (clé API)
 
 ```bash
-ssh root@195.110.35.45
-git clone https://github.com/padojadi/africagame.git /opt/africagame
-cd /opt/africagame
-chmod +x scripts/deploy-vps.sh
-./scripts/deploy-vps.sh
+# Initier paiement
+curl -X POST /api/payments/initiate -H "x-api-key: <API_KEY>" -d '{...}'
+
+# Déclarer pari
+curl -X POST /api/bets/declare -H "x-api-key: <API_KEY>" -d '{...}'
 ```
-
-URL de production : **https://africagame.2ticglobal.com**
-
-## Installation locale (Mac)
-
-```bash
-./scripts/setup-local.sh "/Users/Paul Do Mac Folders/Protosen_Hostinger/Africa Game"
-```
-
-## Fonctionnalités
-
-- Inscription / connexion des participants (18-30 ans)
-- Soumission de projets (idée en ~500 mots, patrimoine culturel)
-- Gestion des hackathons panafricains
-- Modules de formation Unreal Engine
-- Actualités et annonces
-- **Panel admin** : utilisateurs, projets, statistiques, CRUD complet
-
-## API Endpoints principaux
-
-| Méthode | Route | Description |
-|---------|-------|-------------|
-| POST | `/api/auth/login` | Connexion |
-| POST | `/api/auth/register` | Inscription |
-| GET | `/api/hackathons` | Liste hackathons |
-| GET | `/api/courses` | Formations |
-| GET | `/api/users` | Utilisateurs (admin) |
-| POST | `/api/users` | Créer utilisateur (admin) |
-| GET | `/api/stats/dashboard` | Statistiques (admin) |

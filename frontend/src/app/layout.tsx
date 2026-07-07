@@ -4,9 +4,8 @@ import { Navbar } from '@/components/Navbar';
 import { Footer } from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Africa Game — Plateforme Panafricaine',
-  description:
-    'Plateforme panafricaine de formation et accompagnement des jeunes talents africains en création de jeux vidéo.',
+  title: 'Africa Game — Régulation des flux de jeux',
+  description: 'Plateforme panafricaine de régulation, concentrateur de paiements et monitoring des paris',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

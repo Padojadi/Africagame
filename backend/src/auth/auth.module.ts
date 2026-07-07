@@ -6,8 +6,9 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-import { JwtAuthGuard } from '../common/auth.guard';
+import { JwtAuthGuard, ApiKeyGuard } from '../common/auth.guard';
 import { RolesGuard } from '../common/roles.guard';
+import { AuditService } from '../common/audit.service';
 
 @Module({
   imports: [
@@ -16,9 +17,7 @@ import { RolesGuard } from '../common/roles.guard';
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({
         secret: config.get<string>('JWT_SECRET') || 'dev-secret',
-        signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES_IN') || '7d',
-        },
+        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') || '7d' },
       }),
       inject: [ConfigService],
     }),
@@ -27,9 +26,11 @@ import { RolesGuard } from '../common/roles.guard';
   providers: [
     AuthService,
     JwtStrategy,
+    AuditService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: ApiKeyGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
-  exports: [AuthService],
+  exports: [AuthService, AuditService],
 })
 export class AuthModule {}

@@ -1,23 +1,33 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
+export type UserRole = 'EXPLOITANT' | 'REGULATEUR' | 'OPERATEUR';
+
 export interface User {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-  role: 'ADMIN' | 'MODERATOR' | 'MENTOR' | 'PARTICIPANT';
-  age?: number;
-  phone?: string;
-  active: boolean;
-  country?: { id: string; name: string; flagEmoji?: string };
+  role: UserRole;
+  jurisdiction?: { id: string; name: string; code: string; currency?: { code: string; symbol: string } };
+  gameOperator?: { id: string; name: string; licenseNumber: string };
 }
 
-export interface AuthResponse {
-  user: User;
-  accessToken: string;
+export interface Dashboard {
+  totals: {
+    payments: number;
+    bets: number;
+    jurisdictions: number;
+    operators: number;
+    outsidePayments: number;
+    undeclaredBets: number;
+    paymentVolume: number;
+    pbj: number;
+  };
+  byChannel: Array<{ channel: string; _count: number; _sum: { amount: number } }>;
+  role: UserRole;
 }
 
-function getToken(): string | null {
+function getToken() {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem('token');
 }
@@ -45,7 +55,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     ...(options.headers as Record<string, string>),
   };
   if (token) headers.Authorization = `Bearer ${token}`;
-
   const res = await fetch(`${API_URL}${path}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
@@ -56,45 +65,82 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
 export const api = {
   login: (email: string, password: string) =>
-    request<AuthResponse>('/auth/login', {
+    request<{ user: User; accessToken: string }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
-  register: (data: Record<string, unknown>) =>
-    request<AuthResponse>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
   me: () => request<User>('/auth/me'),
-  countries: () => request<Array<{ id: string; name: string; flagEmoji?: string }>>('/countries'),
-  hackathons: () => request<unknown[]>('/hackathons'),
-  courses: (published = true) => request<unknown[]>(`/courses?published=${published}`),
-  news: (published = true) => request<unknown[]>(`/news?published=${published}`),
-  stats: () =>
-    request<{
-      totals: Record<string, number>;
-      projectsByStatus: Array<{ status: string; _count: number }>;
-      usersByRole: Array<{ role: string; _count: number }>;
-    }>('/stats/dashboard'),
+  dashboard: () => request<Dashboard>('/reporting/dashboard'),
+  payments: (params?: string) => request<Payment[]>(`/payments${params ? `?${params}` : ''}`),
+  bets: (params?: string) => request<Bet[]>(`/bets${params ? `?${params}` : ''}`),
+  pbj: () => request<{ pbj: number; count: number }>('/bets/pbj'),
+  invoices: () => request<Invoice[]>('/fiscal/invoices'),
+  jurisdictions: () => request<Jurisdiction[]>('/jurisdictions'),
+  operators: () => request<GameOperator[]>('/game-operators'),
+  audit: () => request<Array<{
+    id: string; action: string; entity: string; entityId?: string;
+    createdAt: string; user?: { email: string; firstName: string; role: string };
+  }>>('/audit'),
+  responsibleGaming: () => request<Array<{
+    id: string; msisdn?: string; riskLevel: string;
+    totalDeposits: number; totalBets: number; notes?: string;
+  }>>('/responsible-gaming'),
   users: () => request<User[]>('/users'),
   createUser: (data: Record<string, unknown>) =>
     request<User>('/users', { method: 'POST', body: JSON.stringify(data) }),
-  updateUser: (id: string, data: Record<string, unknown>) =>
-    request<User>(`/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  deleteUser: (id: string) => request(`/users/${id}`, { method: 'DELETE' }),
-  projects: () => request<Project[]>('/projects'),
-  myProjects: () => request<Project[]>('/projects/mine'),
-  createProject: (data: Record<string, unknown>) =>
-    request<Project>('/projects', { method: 'POST', body: JSON.stringify(data) }),
 };
 
-export interface Project {
+export interface Payment {
   id: string;
-  title: string;
-  description: string;
+  nature: string;
+  amount: number;
+  currencyCode: string;
+  channel: string;
+  msisdn?: string;
   status: string;
-  heritage?: string;
-  author?: { firstName: string; lastName: string };
-  country?: { name: string; flagEmoji?: string };
-  createdAt?: string;
+  operatedAt: string;
+  gameOperator?: { name: string };
+  jurisdiction?: { name: string };
+}
+
+export interface Bet {
+  id: string;
+  nature: string;
+  amount: number;
+  currencyCode: string;
+  channel: string;
+  gameType: string;
+  msisdn?: string;
+  status: string;
+  operatedAt: string;
+  gameOperator?: { name: string };
+}
+
+export interface Invoice {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  pbjAmount: number;
+  levyAmount: number;
+  currencyCode: string;
+  status: string;
+  gameOperator?: { name: string };
+  jurisdiction?: { name: string };
+}
+
+export interface Jurisdiction {
+  id: string;
+  name: string;
+  code: string;
+  timezone: string;
+  currency?: { code: string; symbol: string };
+  allowedChannels?: Array<{ channel: string; enabled: boolean }>;
+  _count?: { gameOperators: number };
+}
+
+export interface GameOperator {
+  id: string;
+  name: string;
+  licenseNumber: string;
+  jurisdiction?: { name: string };
 }

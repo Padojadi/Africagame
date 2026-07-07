@@ -7,131 +7,325 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
-  MODERATOR
-  MENTOR
-  PARTICIPANT
+enum UserRole {
+  EXPLOITANT
+  REGULATEUR
+  OPERATEUR
 }
 
-enum ProjectStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  ACCEPTED
-  REJECTED
+enum Channel {
+  RETAIL
+  ONLINE
+  USSD
+  SMS
 }
 
-enum HackathonStatus {
-  UPCOMING
-  REGISTRATION_OPEN
-  IN_PROGRESS
-  COMPLETED
+enum PaymentNature {
+  DEPOT
+  RETRAIT
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  ERROR
+  EXPIRED
+  OUTSIDE_CONCENTRATOR
+}
+
+enum BetNature {
+  PRISE_PARI
+  PAIEMENT
+  ANNULATION
+  CASHOUT
+}
+
+enum BetStatus {
+  PENDING
+  WON
+  LOST
+  CASHOUT
+  EXPIRED
   CANCELLED
 }
 
-model Country {
+enum GameType {
+  SPORT
+  HIPPIQUE
+  VIRTUEL
+  CASINO
+  LOTO
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  VALIDATE
+  REJECT
+  EXPORT
+  CONFIGURE
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model Currency {
   id        String   @id @default(uuid())
-  name      String   @unique
-  code      String   @unique @db.VarChar(3)
-  flagEmoji String?
+  code      String   @unique @db.VarChar(5)
+  name      String
+  symbol    String
+  decimals  Int      @default(2)
   active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  users     User[]
-  projects  Project[]
-  hackathons Hackathon[]
+  jurisdictions Jurisdiction[]
+}
+
+model Jurisdiction {
+  id              String   @id @default(uuid())
+  name            String
+  code            String   @unique @db.VarChar(5)
+  currencyId      String
+  currency        Currency @relation(fields: [currencyId], references: [id])
+  timezone        String   @default("Africa/Abidjan")
+  defaultLanguage String   @default("fr")
+  active          Boolean  @default(true)
+  dataRetentionMonths Int  @default(18)
+  archiveYears    Int      @default(5)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  users           User[]
+  gameOperators   GameOperator[]
+  paymentProviders PaymentProvider[]
+  regulatoryRules RegulatoryRule[]
+  payments        PaymentTransaction[]
+  bets            BetTransaction[]
+  invoices        Invoice[]
+  allowedChannels JurisdictionChannel[]
+}
+
+model JurisdictionChannel {
+  id             String       @id @default(uuid())
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id], onDelete: Cascade)
+  channel        Channel
+  enabled        Boolean      @default(true)
+
+  @@unique([jurisdictionId, channel])
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  role      Role     @default(PARTICIPANT)
-  age       Int?
-  phone     String?
-  bio       String?
-  active    Boolean  @default(true)
-  countryId String?
-  country   Country? @relation(fields: [countryId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  projects  Project[]
-  teamMemberships TeamMember[]
-  news      News[]
+  id             String        @id @default(uuid())
+  email          String        @unique
+  password       String
+  firstName      String
+  lastName       String
+  role           UserRole
+  active         Boolean       @default(true)
+  mfaEnabled     Boolean       @default(false)
+  jurisdictionId String?
+  jurisdiction   Jurisdiction? @relation(fields: [jurisdictionId], references: [id])
+  gameOperatorId String?
+  gameOperator   GameOperator? @relation(fields: [gameOperatorId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  auditLogs      AuditLog[]
 }
 
-model Project {
-  id          String        @id @default(uuid())
-  title       String
-  description String
-  heritage    String?
-  status      ProjectStatus @default(DRAFT)
-  authorId    String
-  author      User          @relation(fields: [authorId], references: [id])
-  countryId   String?
-  country     Country?      @relation(fields: [countryId], references: [id])
-  team        Team?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+model GameOperator {
+  id             String       @id @default(uuid())
+  name           String
+  licenseNumber  String
+  apiKey         String       @unique @default(uuid())
+  active         Boolean      @default(true)
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  users          User[]
+  payments       PaymentTransaction[]
+  bets           BetTransaction[]
+  invoices       Invoice[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([jurisdictionId, licenseNumber])
 }
 
-model Team {
-  id        String       @id @default(uuid())
-  name      String
-  projectId String       @unique
-  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  members   TeamMember[]
-  createdAt DateTime     @default(now())
+model PaymentProvider {
+  id             String       @id @default(uuid())
+  name           String
+  code           String
+  type           String       @default("MOBILE_MONEY")
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  config         Json?
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+
+  @@unique([jurisdictionId, code])
 }
 
-model TeamMember {
-  id        String   @id @default(uuid())
-  teamId    String
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  role      String   @default("member")
-  createdAt DateTime @default(now())
-
-  @@unique([teamId, userId])
+model RegulatoryRule {
+  id             String       @id @default(uuid())
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  name           String
+  baseType       String       @default("PBJ")
+  rate           Decimal      @db.Decimal(8, 4)
+  threshold      Decimal?     @db.Decimal(18, 2)
+  periodicity    String       @default("MONTHLY")
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
-model Hackathon {
-  id          String          @id @default(uuid())
-  title       String
-  description String
-  startDate   DateTime
-  endDate     DateTime
-  maxTeams    Int             @default(10)
-  quotaPerCountry Int         @default(5)
-  status      HackathonStatus @default(UPCOMING)
-  countryId   String?
-  country     Country?        @relation(fields: [countryId], references: [id])
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+model PaymentTransaction {
+  id               String        @id @default(uuid())
+  externalId       String?
+  idempotencyKey   String?       @unique
+  jurisdictionId   String
+  jurisdiction     Jurisdiction  @relation(fields: [jurisdictionId], references: [id])
+  gameOperatorId   String
+  gameOperator     GameOperator  @relation(fields: [gameOperatorId], references: [id])
+  nature           PaymentNature
+  amount           Decimal       @db.Decimal(18, 2)
+  currencyCode     String
+  channel          Channel
+  msisdn           String?
+  sessionId        String?
+  actorRef         String?
+  status           PaymentStatus @default(PENDING)
+  outsideConcentrator Boolean    @default(false)
+  operatedAt       DateTime      @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  steps            PaymentStep[]
+
+  @@index([jurisdictionId, operatedAt])
+  @@index([gameOperatorId, operatedAt])
+  @@index([msisdn])
+  @@index([channel])
 }
 
-model Course {
-  id          String   @id @default(uuid())
-  title       String
-  description String
-  moduleOrder Int      @default(0)
-  duration    Int?
-  content     String?
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model PaymentStep {
+  id            String             @id @default(uuid())
+  paymentId     String
+  payment       PaymentTransaction @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  stepOrder     Int
+  stepType      String
+  status        PaymentStatus
+  payload       Json?
+  createdAt     DateTime           @default(now())
 }
 
-model News {
-  id          String   @id @default(uuid())
-  title       String
-  content     String
-  published   Boolean  @default(false)
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model BetTransaction {
+  id             String       @id @default(uuid())
+  externalId     String?
+  idempotencyKey String?      @unique
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  gameOperatorId String
+  gameOperator   GameOperator @relation(fields: [gameOperatorId], references: [id])
+  nature         BetNature
+  amount         Decimal      @db.Decimal(18, 2)
+  currencyCode   String
+  channel        Channel
+  msisdn         String?
+  gameType       GameType
+  actorRef       String?
+  status         BetStatus    @default(PENDING)
+  undeclared     Boolean      @default(false)
+  operatedAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([jurisdictionId, operatedAt])
+  @@index([gameOperatorId, operatedAt])
+  @@index([msisdn])
+  @@index([channel])
+}
+
+model Invoice {
+  id             String       @id @default(uuid())
+  jurisdictionId String
+  jurisdiction   Jurisdiction @relation(fields: [jurisdictionId], references: [id])
+  gameOperatorId String
+  gameOperator   GameOperator @relation(fields: [gameOperatorId], references: [id])
+  periodStart    DateTime
+  periodEnd      DateTime
+  pbjAmount      Decimal      @db.Decimal(18, 2)
+  levyAmount     Decimal      @db.Decimal(18, 2)
+  currencyCode   String
+  status         String       @default("DRAFT")
+  createdAt      DateTime     @default(now())
+}
+
+model ResponsibleGamingProfile {
+  id             String    @id @default(uuid())
+  msisdn         String?
+  playerRef      String?
+  jurisdictionId String
+  riskLevel      RiskLevel @default(LOW)
+  totalDeposits  Decimal   @default(0) @db.Decimal(18, 2)
+  totalBets      Decimal   @default(0) @db.Decimal(18, 2)
+  notes          String?
+  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
+
+  @@index([msisdn])
+  @@index([jurisdictionId, riskLevel])
+}
+
+model AuditLog {
+  id        String      @id @default(uuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  action    AuditAction
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+model UssdSession {
+  id             String   @id @default(uuid())
+  sessionId      String   @unique
+  msisdn         String
+  jurisdictionId String
+  gameOperatorId String?
+  channel        Channel  @default(USSD)
+  currentStep    String?
+  status         String   @default("ACTIVE")
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([msisdn])
+  @@index([expiresAt])
+}
+
+model SmsMessage {
+  id             String   @id @default(uuid())
+  messageId      String   @unique
+  msisdn         String
+  jurisdictionId String
+  direction      String
+  keyword        String?
+  body           String
+  dlrStatus      String?
+  correlatedId   String?
+  processed      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([msisdn])
+  @@index([messageId])
 }

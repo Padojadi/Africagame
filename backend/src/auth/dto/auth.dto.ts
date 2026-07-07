@@ -1,8 +1,8 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({ example: 'admin@africagame.2ticglobal.com' })
+  @ApiProperty()
   @IsEmail()
   email: string;
 
@@ -12,7 +12,7 @@ export class LoginDto {
   password: string;
 }
 
-export class RegisterDto {
+export class CreateUserDto {
   @ApiProperty()
   @IsEmail()
   email: string;
@@ -30,29 +30,19 @@ export class RegisterDto {
   @IsString()
   lastName: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(18)
-  @Max(35)
-  age?: number;
+  @ApiProperty({ enum: ['EXPLOITANT', 'REGULATEUR', 'OPERATEUR'] })
+  @IsString()
+  role: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  phone?: string;
+  jurisdictionId?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  countryId?: string;
-}
-
-export class CreateUserDto extends RegisterDto {
-  @ApiPropertyOptional({ enum: ['ADMIN', 'MODERATOR', 'MENTOR', 'PARTICIPANT'] })
-  @IsOptional()
-  @IsString()
-  role?: string;
+  gameOperatorId?: string;
 }
 
 export class UpdateUserDto {
@@ -64,7 +54,6 @@ export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MinLength(8)
   password?: string;
 
   @ApiPropertyOptional()
@@ -79,15 +68,5 @@ export class UpdateUserDto {
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  role?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
   active?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  countryId?: string;
 }

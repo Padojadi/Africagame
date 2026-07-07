@@ -1,7 +1,8 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from './decorators';
+import { IS_PUBLIC_KEY, API_KEY_AUTH } from './decorators';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -15,14 +16,40 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
     if (isPublic) return true;
+    const apiKey = this.reflector.getAllAndOverride<boolean>(API_KEY_AUTH, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (apiKey) return true;
     return super.canActivate(context);
   }
 }
 
 @Injectable()
-export class AdminGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const { user } = context.switchToHttp().getRequest();
-    return user?.role === 'ADMIN';
+export class ApiKeyGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,
+    private prisma: PrismaService,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const needsKey = this.reflector.getAllAndOverride<boolean>(API_KEY_AUTH, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!needsKey) return true;
+
+    const req = context.switchToHttp().getRequest();
+    const key = req.headers['x-api-key'] as string;
+    if (!key) throw new UnauthorizedException('Clé API requise');
+
+    const operator = await this.prisma.gameOperator.findUnique({
+      where: { apiKey: key, active: true },
+      include: { jurisdiction: { include: { currency: true } } },
+    });
+    if (!operator) throw new UnauthorizedException('Clé API invalide');
+
+    req.operator = operator;
+    return true;
   }
 }
