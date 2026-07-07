@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { clearAuth, getStoredUser, User } from '@/lib/api';
+import { getStoredUser, User } from '@/lib/api';
 import { Lang, t } from '@/lib/i18n';
+import { UserMenu } from '@/components/UserMenu';
 import { Shield, Menu, X, Globe } from 'lucide-react';
 
 export function Navbar() {
@@ -20,12 +21,6 @@ export function Navbar() {
   const changeLang = (l: Lang) => {
     setLang(l);
     localStorage.setItem('lang', l);
-  };
-
-  const logout = () => {
-    clearAuth();
-    setUser(null);
-    window.location.href = '/';
   };
 
   const nav = [
@@ -53,22 +48,31 @@ export function Navbar() {
               <button key={l} onClick={() => changeLang(l)} className={`rounded px-1.5 py-0.5 uppercase ${lang === l ? 'bg-africa-green text-white' : 'text-gray-500'}`}>{l}</button>
             ))}
           </div>
-          {user ? (
-            <>
-              <Link href="/admin" className="text-sm font-semibold text-africa-gold">{t(lang, 'dashboard')}</Link>
-              <button onClick={logout} className="text-sm text-gray-500">{t(lang, 'logout')}</button>
-            </>
-          ) : (
-            <Link href="/connexion" className="btn-primary text-sm">{t(lang, 'login')}</Link>
-          )}
+          <UserMenu lang={lang} />
         </nav>
 
-        <button className="md:hidden" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
+        <button className="md:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
+          {open ? <X /> : <Menu />}
+        </button>
       </div>
+
       {open && (
         <div className="border-t px-4 py-3 md:hidden">
-          {user && nav.map((l) => <Link key={l.href} href={l.href} className="block py-2">{l.label}</Link>)}
-          {user ? <button onClick={logout}>{t(lang, 'logout')}</button> : <Link href="/connexion">{t(lang, 'login')}</Link>}
+          {user && nav.map((l) => (
+            <Link key={l.href} href={l.href} className="block py-2" onClick={() => setOpen(false)}>{l.label}</Link>
+          ))}
+          {user ? (
+            <>
+              <Link href="/profil" className="block py-2" onClick={() => setOpen(false)}>{t(lang, 'profile')}</Link>
+              <Link href="/profil#portefeuille" className="block py-2" onClick={() => setOpen(false)}>{t(lang, 'wallet')}</Link>
+              <Link href="/admin" className="block py-2" onClick={() => setOpen(false)}>{t(lang, 'dashboard')}</Link>
+            </>
+          ) : (
+            <Link href="/connexion" className="block py-2">{t(lang, 'login')}</Link>
+          )}
+          <div className="mt-2 md:hidden">
+            <UserMenu lang={lang} />
+          </div>
         </div>
       )}
     </header>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, setAuth } from '@/lib/api';
+import { PasswordInput } from '@/components/PasswordInput';
 import { Shield } from 'lucide-react';
 
 export default function LoginPage() {
@@ -33,10 +34,12 @@ export default function LoginPage() {
         <Shield className="mx-auto mb-4 h-12 w-12 text-africa-green" />
         <h1 className="mb-6 text-center text-2xl font-bold">Connexion sécurisée</h1>
         {error && <p className="mb-4 rounded bg-red-50 p-2 text-sm text-red-600">{error}</p>}
-        <label className="label">Email</label>
-        <input className="input mb-4" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label className="label">Mot de passe</label>
-        <input className="input mb-6" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <label className="label" htmlFor="email">Email</label>
+        <input id="email" className="input mb-4" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label className="label" htmlFor="password">Mot de passe</label>
+        <div className="mb-6">
+          <PasswordInput id="password" value={password} onChange={setPassword} required />
+        </div>
         <button className="btn-primary w-full" disabled={loading}>{loading ? 'Connexion...' : 'Se connecter'}</button>
       </form>
     </div>

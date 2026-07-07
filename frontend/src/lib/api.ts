@@ -8,6 +8,12 @@ export interface User {
   firstName: string;
   lastName: string;
   role: UserRole;
+  active?: boolean;
+  mfaEnabled?: boolean;
+  jurisdictionId?: string | null;
+  gameOperatorId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
   jurisdiction?: { id: string; name: string; code: string; currency?: { code: string; symbol: string } };
   gameOperator?: { id: string; name: string; licenseNumber: string };
 }
