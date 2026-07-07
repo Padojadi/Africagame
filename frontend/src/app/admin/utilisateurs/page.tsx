@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, getStoredUser, User, Jurisdiction, GameOperator } from '@/lib/api';
-import { BackButton } from '@/components/BackButton';
 import { PasswordInput } from '@/components/PasswordInput';
 import { Plus, Pencil, Ban, CheckCircle, Trash2, X } from 'lucide-react';
 
@@ -141,9 +140,7 @@ export default function UsersPage() {
   const set = (key: keyof UserForm, value: string) => setForm((f) => ({ ...f, [key]: value }));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8">
-      <BackButton />
-
+    <div className="mx-auto max-w-7xl px-4 py-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Gestion des utilisateurs</h1>
         <button onClick={openCreate} className="btn-primary flex items-center gap-2">
